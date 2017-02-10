@@ -93,7 +93,7 @@ function Expand-ArXivManifest {
     # Add any Notebooks to anc/. We'll possibly rerun them in a later build
     # stage.
     $Manifest["Notebooks"] | % {
-        $buildFiles[$_] = Join-Path "./anc" (Split-Path -Leaf $_)
+        $buildFiles[(Resolve-Path $_)] = Join-Path "./anc" (Split-Path -Leaf $_)
     } | Out-Null
 
     # Finish by attaching the hashtable of build files to the manifest
@@ -102,7 +102,38 @@ function Expand-ArXivManifest {
     $expandedManifest["BuildFiles"] = $buildFiles;
     
     $expandedManifest
-    
+
+}
+
+function Copy-ArXivArchive {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)] [hashtable]
+        $ExpandedManifest
+    )
+
+    $tempDirName = [System.IO.Path]::GetTempFileName();
+    Remove-Item $tempDirName;
+    New-Item -ItemType Directory -Path $tempDirName | Out-Null;
+
+    Write-Host -ForegroundColor Blue "Copying arXiv build files to $tempDirName."
+
+    $ExpandedManifest["BuildFiles"].GetEnumerator() | % {
+        
+        $target = Join-Path $tempDirName $_.Value;
+        $targetDir = Split-Path $target;
+
+        # Make the target directory if it doesn't exist.
+        if (!(Get-Item $targetDir -ErrorAction SilentlyContinue)) {
+            New-Item -ItemType Directory $targetDir
+        }
+        write-host "Copying $($_.Key) -> $target"
+        Copy-Item $_.Key $target
+
+    } | Out-Null;
+
+    $tempDirName
+
 }
 
 ##
@@ -116,12 +147,19 @@ function Export-ArXivArchive {
 
     $ExpandedManifest = Expand-ArXivManifest $Manifest;
 
-    # TODO: Run build.
+    Invoke-TeXBuildEngine $ExpandedManifest.TeXMain;
+
     # TODO: Run notebooks.
-    # TODO: Copy to temporary directory.
+    
+    $tempDir = Copy-ArXivArchive $ExpandedManifest;
+    
     # TODO: Rewrite LaTeX commands in temporary directory.
-    # TODO: Pack into ZIP.
-    # TODO: Delete temporary directory.
+
+    $archiveName = "./$($ExpandedManifest["ProjectName"]).zip"
+    Compress-Archive -Force -Path (Join-Path $tempDir "*") -DestinationPath $archiveName
+    Write-Host -ForegroundColor Blue "Wrote arXiv archive to $archiveName."
+
+    Remove-Item -Force -Recurse $tempDir;
 
 }
 

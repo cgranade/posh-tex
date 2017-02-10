@@ -220,6 +220,52 @@ function Out-TeXStyleDocumentation {
         Write-Error -Message "DocStrip file $dtxName not found." -Category ObjectNotFound
     }
 
-    # FIXME: check for proper PDF LaTeX build system (texify, latexmk, etc.).
-    pdflatex $dtxName;
+    Invoke-TeXBuildEngine $dtxName;
+
+}
+
+
+function Invoke-TeXBuildEngine {
+    # TODO: needs to switch PDF/DVI.
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)] [string]
+        $Name,
+
+        [System.Nullable``1[[TeXDistributions]]]
+        $TeXDist = $null
+    )
+
+    if (!($TeXDist)) {
+        $TeXDist = Get-TeXDistribution;
+    }
+
+    switch ($TeXDist) {
+        "MiKTeX" {
+            $preferredCommand = "texify";
+            $args = "--pdf";
+        }
+
+        "TeXLive" {
+            $preferredCommand = "latexmk";
+            $args = "-pdf";
+        }
+
+        default {
+            $preferredCommand = $null;
+            $args = "";
+        }
+    }
+    
+    if ($preferredCommand -and (Get-Command $preferredCommand -ErrorAction SilentlyContinue)) {
+        Write-Host -ForegroundColor Blue "Building $Name using $preferredCommand..."
+        & "$preferredCommand" $args $Name
+    } else {
+        Write-Host -ForegroundColor Blue "Building $Name manually using pdflatex and bibtex..."
+        pdflatex $Name
+        pdflatex $Name
+        bibtex $Name
+        pdflatex $Name
+    }
+
 }
