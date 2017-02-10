@@ -62,6 +62,41 @@ closes by attempting to also install the associated Pandoc template.
 
 ### Using PoShTeX to Specify arXiv Manifests ###
 
-**TODO**
+PoShTeX also allows for creating arXiv-ready ZIP files with simple manifest
+scripts. Since arXiv only allows TeX projects that use folders to be uploaded as a ZIP,
+this can help authors organize their manuscript projects without sacrificing arXiv
+support. For instance, the following manifest might be used to produce a
+ZIP file for a paper on metalearning problems.
 
+```powershell
+#region Bootstrap PoShTeX
+if (!(Get-Module -ListAvailable -Name posh-tex -ErrorAction SilentlyContinue)) {
+    Install-Module posh-tex -Scope CurrentUser
+}
+Import-Module posh-tex
+#endregion
 
+Export-ArXivArchive @{
+    ProjectName = "mlp";
+    TeXMain = "mlp.tex";
+    AdditionalFiles = @{
+        "fig/*.pdf" = $null;
+        "revquantum.sty" = $null;
+        "quantumarticle.cls" = $null;
+    };
+    Notebooks = @(
+        "nb/paper-figures.ipynb"
+    )
+}
+```
+
+The resulting ZIP archive will contain all of the following files:
+
+- ``mlp.tex``
+- ``mlp.bbl``
+- ``revquantum.sty``
+- ``quantumarticle.cls``
+- ``anc/paper-figures.ipynb``
+- ``fig/`*.pdf``
+
+To ensure that everything works correctly, this manifest script will also recompile the manuscript.
