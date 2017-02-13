@@ -51,6 +51,20 @@ function get-extension {
     return [System.IO.Path]::GetExtension($path);
 }
 
+
+function Test-IsPOSIX {
+    if (!(Get-Command uname -ErrorAction SilentlyContinue)) {
+        return $false;
+    }
+
+    $uname = uname;
+    if ($uname.Trim() -eq "Linux" -or $uname.Trim() -eq "Darwin") {
+        return $true;
+    }
+
+    return $false;
+}
+
 ## COMMANDS ##
 
 function Install-Resources {

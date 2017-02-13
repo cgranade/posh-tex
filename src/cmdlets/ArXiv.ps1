@@ -77,7 +77,7 @@ function Expand-ArXivManifest {
             Resolve-Path $glob -Relative | % {
                 $buildFiles[(Resolve-Path $_)] = $_;
             } | Out-Null
-        } elseif ((Get-Item $targetDir).PSIsContainer) {
+        } elseif ($targetDir.EndsWith("/") -or $targetDir.EndsWith("\")) {
             # Next, check if the target is a directory. If so, each
             # item matching the glob gets added to the same directory.
             Resolve-Path $glob -Relative | % {
@@ -156,7 +156,22 @@ function Export-ArXivArchive {
     # TODO: Rewrite LaTeX commands in temporary directory.
 
     $archiveName = "./$($ExpandedManifest["ProjectName"]).zip"
-    Compress-Archive -Force -Path (Join-Path $tempDir "*") -DestinationPath $archiveName
+    
+    # We make the final ZIP file using the native zip command
+    # on POSIX in lieu of
+    # https://github.com/PowerShell/Microsoft.PowerShell.Archive/issues/26.
+    if (Test-IsPOSIX) {
+        if (Get-ChildItem $archiveName -ErrorAction SilentlyContinue) {
+            Remove-Item $archiveName
+        }
+        pushd .
+        cd $tempDir
+        zip -r $archiveName .
+        popd
+        mv (Join-Path $tempDir $archiveName) .
+    } else {
+        Compress-Archive -Force -Path (Join-Path $tempDir "*") -DestinationPath $archiveName
+    }
     Write-Host -ForegroundColor Blue "Wrote arXiv archive to $archiveName."
 
     Remove-Item -Force -Recurse $tempDir;
