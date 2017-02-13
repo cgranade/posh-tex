@@ -94,7 +94,8 @@ function Get-TeXUserDir {
 
             foreach ($reportLine in $MiKTeXReport.Split([environment]::NewLine)) {
                 if ($reportLine.Contains(":")) {
-                    # The [int] here is a workaround for a bug in PowerShell 6.0.0-alpha.
+                    # The [int] here is a workaround for a bug in PowerShell 6.0.0-alpha:
+                    # https://github.com/PowerShell/PowerShell/issues/3137
                     $key, $value = $reportLine.Split(":", [int]2);
                     if ($key.ToLower().Trim() -eq "userinstall") {
                         return $value.Trim();
