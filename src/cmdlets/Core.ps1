@@ -65,6 +65,16 @@ function Test-IsPOSIX {
     return $false;
 }
 
+function Test-CommandExists {
+    param([string] $Name);
+
+    if (Get-Command -Name $Name -ErrorAction SilentlyContinue) {
+        return $true;
+    } else {
+        return $false;
+    }
+}
+
 ## COMMANDS ##
 
 function Install-Resources {
