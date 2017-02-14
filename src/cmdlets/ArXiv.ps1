@@ -142,14 +142,16 @@ function Copy-ArXivArchive {
 function Export-ArXivArchive {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory=$true)] [hashtable] $Manifest
+        [Parameter(Mandatory=$true)] [hashtable] $Manifest,
+        [switch] $RunNotebooks
     );
 
     $ExpandedManifest = Expand-ArXivManifest $Manifest;
 
     Invoke-TeXBuildEngine $ExpandedManifest.TeXMain;
-
-    # TODO: Run notebooks.
+    if ($RunNotebooks -and $ExpandedManifest.Notebooks.Count -ge 0) {
+        $ExpandedManifest.Notebooks | Update-JupyterNotebook
+    }
     
     $tempDir = Copy-ArXivArchive $ExpandedManifest;
     
