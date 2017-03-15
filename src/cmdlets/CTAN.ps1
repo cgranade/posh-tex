@@ -275,16 +275,3 @@ function Export-CTANArchive {
     # Remove-Item -Force -Recurse $tempDir;
 
 }
-
-# ## EXAMPLE MANIFEST ##
-
-# $ExampleManifest = @{
-#     ProjectName = "foo";
-#     TeXMain = "tex/foo.tex";
-#     AdditionalFiles = @{
-#         "fig/*.pdf" = $null;
-#         "fig/*.png" = $null;
-#         "tex/*.sty" = "/";
-#         "fig/*.mp4" = "anc/";
-#     };
-# }
