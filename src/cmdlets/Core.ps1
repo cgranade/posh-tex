@@ -145,7 +145,7 @@ function Compress-ArchiveWithSubfolders {
             New-Item -ItemType Directory $targetDir | Out-Null;
         }
         
-        Write-Host "Copying $SourcePath -> $targetPath"
+        Write-Host "Copying $Src -> $targetPath"
         Copy-Item $Src $targetPath
     }
 

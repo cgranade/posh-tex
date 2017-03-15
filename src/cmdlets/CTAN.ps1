@@ -237,41 +237,21 @@ function Export-CTANArchive {
         if ($ArchiveLayout -eq [CTANArchiveLayout]::TDS) {
             $tdsZipName = "$PackageName.tds.zip";
 
-            # Just pretend for now.
+            # Pack up the TDS ZIP.
             $Manifest | ? {$_.Targets.Contains("TDS")} | % {
-                "$($_.Path) -> $($_.TDSPath) in $tdsZipName";
-            }
+                @{Src=$_.Path; Dest=Join-Path $_.TDSPath ([IO.Path]::GetFileName($_.Path))}
+            } | Compress-ArchiveWithSubfolders -ArchivePath $tdsZipName;
 
             $Manifest = $Manifest + @((Format-CTANManifestItem -Path $tdsZipName -Targets CTAN));
         }
 
         $ctanZipName = "$PackageName.zip";
 
-        # Just pretend for now.
+        # Finally, write the CTAN zip itself.
         $Manifest | ? {$_.Targets.Contains("CTAN")} | % {
-            "$($_.Path) -> / in $ctanZipName";
-        }
-
+            @{Src=$_.Path; Dest=Join-Path $PackageName ([IO.Path]::GetFileName($_.Path))}
+        } | Compress-ArchiveWithSubfolders -ArchivePath $ctanZipName;
         
     }
-    
-    # # We make the final ZIP file using the native zip command
-    # # on POSIX in lieu of
-    # # https://github.com/PowerShell/Microsoft.PowerShell.Archive/issues/26.
-    # if (Test-IsPOSIX) {
-    #     if (Get-ChildItem $archiveName -ErrorAction SilentlyContinue) {
-    #         Remove-Item $archiveName
-    #     }
-    #     pushd .
-    #     cd $tempDir
-    #     zip -r $archiveName .
-    #     popd
-    #     mv (Join-Path $tempDir $archiveName) .
-    # } else {
-    #     Compress-Archive -Force -Path (Join-Path $tempDir "*") -DestinationPath $archiveName
-    # }
-    # Write-Host -ForegroundColor Blue "Wrote arXiv archive to $archiveName."
-
-    # Remove-Item -Force -Recurse $tempDir;
 
 }
