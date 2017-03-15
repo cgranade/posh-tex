@@ -51,6 +51,25 @@ function get-extension {
     return [System.IO.Path]::GetExtension($path);
 }
 
+function get-fromhashtable {
+    param(
+        [hashtable] $InputObject,
+        [string[]] $Keys
+    )
+
+    [string] $found = $null;
+
+    foreach ($key in $Keys) {
+        if ($InputObject.Contains($key)) {
+            $found = $InputObject[$key];
+            break
+        }
+    }
+
+    return $found
+
+}
+
 
 function Test-IsPOSIX {
     if (!(Get-Command uname -ErrorAction SilentlyContinue)) {
@@ -72,6 +91,84 @@ function Test-CommandExists {
         return $true;
     } else {
         return $false;
+    }
+}
+
+function Compress-ArchiveWithSubfolders {
+    [CmdletBinding(
+        DefaultParameterSetName="PSObject"
+    )]
+    param(
+        [Parameter(ValueFromPipelineByPropertyName=$true, ParameterSetName="PSObject")]
+        [Alias("Source", "Src")]
+        [string[]] $SourcePath,
+
+        [Parameter(ValueFromPipelineByPropertyName=$true, ParameterSetName="PSObject")]
+        [Alias("Destination", "Dest")]
+        [string[]] $DestinationPath,
+
+        [Parameter(ValueFromPipeline=$true, ParameterSetName="Hashtable")]
+        [hashtable[]] $Paths,
+
+        [Parameter(Mandatory=$true)]
+        [string] $ArchivePath
+    )
+
+    begin {
+        # Make a temporary directory.
+        $tempDirName = [System.IO.Path]::GetTempFileName();
+        Remove-Item $tempDirName;
+        New-Item -ItemType Directory -Path $tempDirName | Out-Null;
+    }
+
+    process {
+        # If we're using hashtables, unpack.
+        switch ($PSCmdlet.ParameterSetName) {
+            "Hashtable" {
+                $Src = (get-fromhashtable -InputObject $Paths[0] -Keys SourcePath, Source, Src)
+                $Dest = (get-fromhashtable -InputObject $Paths[0] -Keys DestinationPath, Destination, Dest)
+            }
+
+            "PSObject" {
+                $Src = $SourcePath[0];
+                $Dest = $DestinationPath[0];
+            }
+        }
+
+        # Copy items from the pipeline into the temporary directory.
+        # Make sure each target directory exists as we go.
+        $targetPath = Join-Path $tempDirName $Dest;
+        $targetDir = Split-Path $targetPath;
+
+        # Make the target directory if it doesn't exist.
+        if (!(Get-Item $targetDir -ErrorAction SilentlyContinue)) {
+            New-Item -ItemType Directory $targetDir | Out-Null;
+        }
+        
+        Write-Host "Copying $SourcePath -> $targetPath"
+        Copy-Item $Src $targetPath
+    }
+
+    end {
+        # Actually make the archive.
+        # We make the final ZIP file using the native zip command
+        # on POSIX in lieu of
+        # https://github.com/PowerShell/Microsoft.PowerShell.Archive/issues/26.
+        if (Test-IsPOSIX) {
+            if (Get-ChildItem $ArchivePath -ErrorAction SilentlyContinue) {
+                Remove-Item $ArchivePath
+            }
+            pushd .
+            cd $tempDirName
+            zip -r $ArchivePath .
+            popd
+            mv (Join-Path $tempDirName $ArchivePath) .
+        } else {
+            Compress-Archive -Force -Path (Join-Path $tempDirName "*") -DestinationPath $ArchivePath
+        }
+
+        # Delete the temporary directory.
+        Remove-Item -Force -Recurse $tempDirName;
     }
 }
 
