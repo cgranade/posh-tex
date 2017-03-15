@@ -44,6 +44,19 @@ try {
 
 ## COMMANDS ##
 
+function Format-CTANManifestItem {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)]
+        [string] $Path,
+
+        [string[]] $Targets = @("CTAN","TDS"),
+        [string] $TDSPath = $null
+    )
+
+    [pscustomobject]@{Path=$Path; TDSPath=$TDSPath; Targets=$Targets} | Write-Output;
+}
+
 function Search-TeXCommandTargets {
     [CmdletBinding()]
     param(
@@ -63,7 +76,6 @@ function Search-TeXCommandTargets {
         $Contents | Select-String -AllMatches -Pattern $pattern | % {
             foreach ($match in $_.Matches) {
                 $match.groups[1]
-                # [pscustomobject]@{Path=$match.groups[1]; TDSOnly=$true}
             }
         }
     }
@@ -84,7 +96,7 @@ function Search-INSFile {
     process {
         foreach ($name in $FileName) {
             # Write out the INS file itself.
-            [pscustomobject]@{Path=$name; TDSPath=$null; TDSOnly=$false} | Write-Output;
+            Format-CTANManifestItem -Path $name -Targets CTAN, TDS
 
             $contents = Get-Content $name;
 
@@ -96,10 +108,10 @@ function Search-INSFile {
 
             # Find \from targets.
             $contents | Search-TeXCommandTargets -CmdName file | % {
-                [pscustomobject]@{Path=$_;TDSPath=$null; TDSOnly=$true}
+                Format-CTANManifestItem -Path $_ -Targets TDS
             }
             $contents | Search-TeXCommandTargets -CmdName from | % {
-                [pscustomobject]@{Path=$_; TDSPath=$null; TDSOnly=$false}
+                Format-CTANManifestItem -Path $_ -Targets CTAN, TDS
             }
 
         }
@@ -119,17 +131,34 @@ function Format-TDSPath {
     )
 
     begin {
+        $doc = "doc/latex/$PackageName";
+        $src = "source/latex/$PackageName";
+        $bin = "scripts/$PackageName";
+        $tex = "tex/latex/$PackageName";
+
         $tdsRootsByExtension = @{
-            ".ins" = "source/latex/$PackageName";
-            ".sty" = "tex/latex/$PackageName";
-            ".pdf" = "doc/latex/$PackageName";
-            ".dtx" = "source/latex/$PackageName";
+            # LaTeX Packages #
+            ".sty" = $tex;
+
+            # DocStrip Package Sources #
+            ".ins" = $src;
+            ".dtx" = $src;
+
+            # Compiled and Plain-Text Documentation #
+            ".pdf" = $doc;
+            ".md" = $doc;
+
+            # Scripts and Executables #
+            ".ps1" = $bin;
+            ".py" = $bin;
+            ".sh" = $bin;
+            ".pl" = $bin;
         };
     }
 
     process {
         foreach ($tdsItem in $TDSManifest) {
-            if ($tdsItem.TDSPath -eq $null) {
+            if (!$tdsItem.TDSPath -and $tdsItem.Targets.Contains("TDS")) {
                 $ext = [IO.Path]::GetExtension($tdsItem.Path);
                 
                 if ($tdsRootsByExtension.ContainsKey($ext)) {
@@ -142,49 +171,110 @@ function Format-TDSPath {
     }
 }
 
+function Format-CTANManifest {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true, Position=0)]
+        [string] $PackageName,
+
+        [Parameter(Mandatory=$true, Position=1, ValueFromPipeline=$true)]
+        [string[]] $Path        
+    )
+
+    process {
+        $Path | % {
+            switch -Wildcard ($_) {
+                "*[/\]Install.ps1" {
+                    # We want installers to be provided only in the CTAN zip,
+                    # not in the TDS folder structure.
+                    Format-CTANManifestItem -Path $_ -Targets CTAN | Write-Output;
+                }
+
+                "*.ins" {
+                    Search-INSFile $_ | Write-Output;
+                }
+
+                default {
+                    Format-CTANManifestItem -Path $_ -Targets CTAN, TDS | Write-Output;
+                }
+            }
+        } | Format-TDSPath -PackageName $PackageName | Write-Output
+    }
+
+}
+
 ##
 # .SYNOPSIS
 ##
-# function Export-CTANArchive {
-#     [CmdletBinding()]
-#     param(
-#         [Parameter(Mandatory=$true)] [CTANArchiveLayout] $ArchiveLayout,
-#         [Parameter(Mandatory=$true)] [hashtable] $Manifest
-#     );
+function Export-CTANArchive {
+    # [CmdletBinding()]
+    param(
+        [string] $PackageName,
 
-#     $ExpandedManifest = Expand-ArXivManifest $Manifest;
+        [Parameter(Mandatory=$true)]
+        [CTANArchiveLayout] $ArchiveLayout,
+        
+        [Parameter(Position=0, Mandatory=$true,ValueFromPipeline=$true)]
+        [string[]] $Path
+    );    
 
-#     Invoke-TeXBuildEngine $ExpandedManifest.TeXMain;
-#     if ($RunNotebooks -and $ExpandedManifest.Notebooks.Count -ge 0) {
-#         $ExpandedManifest.Notebooks | Update-JupyterNotebook
-#     }
+    begin {
+        # Check if $PackageName is defined, and if not,
+        # default to the base name of the first path argument.
+        if (!$PackageName) {
+            $PackageName = [IO.Path]::GetFileNameWithoutExtension($Path[0]);
+        }
+    }
+
+    process {
+        # Actually build the manifest.
+        $Manifest = $Path | Format-CTANManifest -PackageName $PackageName;
+    }
+
+    end {
+        # If the $ArchiveLayout parameter tells us we need to include
+        # a *.tds.zip, then we write that now.
+        if ($ArchiveLayout -eq [CTANArchiveLayout]::TDS) {
+            $tdsZipName = "$PackageName.tds.zip";
+
+            # Just pretend for now.
+            $Manifest | ? {$_.Targets.Contains("TDS")} | % {
+                "$($_.Path) -> $($_.TDSPath) in $tdsZipName";
+            }
+
+            $Manifest = $Manifest + @((Format-CTANManifestItem -Path $tdsZipName -Targets CTAN));
+        }
+
+        $ctanZipName = "$PackageName.zip";
+
+        # Just pretend for now.
+        $Manifest | ? {$_.Targets.Contains("CTAN")} | % {
+            "$($_.Path) -> / in $ctanZipName";
+        }
+
+        
+    }
     
-#     $tempDir = Copy-ArXivArchive $ExpandedManifest;
-    
-#     # TODO: Rewrite LaTeX commands in temporary directory.
+    # # We make the final ZIP file using the native zip command
+    # # on POSIX in lieu of
+    # # https://github.com/PowerShell/Microsoft.PowerShell.Archive/issues/26.
+    # if (Test-IsPOSIX) {
+    #     if (Get-ChildItem $archiveName -ErrorAction SilentlyContinue) {
+    #         Remove-Item $archiveName
+    #     }
+    #     pushd .
+    #     cd $tempDir
+    #     zip -r $archiveName .
+    #     popd
+    #     mv (Join-Path $tempDir $archiveName) .
+    # } else {
+    #     Compress-Archive -Force -Path (Join-Path $tempDir "*") -DestinationPath $archiveName
+    # }
+    # Write-Host -ForegroundColor Blue "Wrote arXiv archive to $archiveName."
 
-#     $archiveName = "./$($ExpandedManifest["ProjectName"]).zip"
-    
-#     # We make the final ZIP file using the native zip command
-#     # on POSIX in lieu of
-#     # https://github.com/PowerShell/Microsoft.PowerShell.Archive/issues/26.
-#     if (Test-IsPOSIX) {
-#         if (Get-ChildItem $archiveName -ErrorAction SilentlyContinue) {
-#             Remove-Item $archiveName
-#         }
-#         pushd .
-#         cd $tempDir
-#         zip -r $archiveName .
-#         popd
-#         mv (Join-Path $tempDir $archiveName) .
-#     } else {
-#         Compress-Archive -Force -Path (Join-Path $tempDir "*") -DestinationPath $archiveName
-#     }
-#     Write-Host -ForegroundColor Blue "Wrote arXiv archive to $archiveName."
+    # Remove-Item -Force -Recurse $tempDir;
 
-#     Remove-Item -Force -Recurse $tempDir;
-
-# }
+}
 
 # ## EXAMPLE MANIFEST ##
 

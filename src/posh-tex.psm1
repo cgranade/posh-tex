@@ -36,3 +36,4 @@
 . $PSScriptRoot\cmdlets\Pandoc.ps1
 . $PSScriptRoot\cmdlets\Jupyter.ps1
 . $PSScriptRoot\cmdlets\ArXiv.ps1
+. $PSScriptRoot\cmdlets\CTAN.ps1
