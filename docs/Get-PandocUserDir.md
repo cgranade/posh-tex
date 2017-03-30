@@ -16,16 +16,17 @@ Get-PandocUserDir [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-{{Fill in the Description}}
+The **Get-PandocUserDir** cmdlet returns the path to the Pandoc user directory
+if Pandoc is installed. This directory can be used to install user-specific resources such as
+templates for converting between different document formats.
 
 ## EXAMPLES
 
 ### Example 1
+```powershell
+PS C:\> Get-PandocUserDir
+C:\Users\<username>\AppData\Roaming\pandoc
 ```
-PS C:\> {{ Add example code here }}
-```
-
-{{ Add example description here }}
 
 ## PARAMETERS
 
@@ -36,7 +37,12 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## OUTPUTS
 
+### String
+
+This cmdlet returns a **String** specifying the Pandoc user directory.
+
 ## NOTES
 
 ## RELATED LINKS
 
+[Pandoc](http://pandoc.org/)
