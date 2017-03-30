@@ -34,9 +34,6 @@
 
 ## COMMANDS ##
 
-##
-# .SYNOPSIS
-##
 function Expand-ArXivManifest {
     # [CmdletBinding()]
     param(
@@ -136,9 +133,6 @@ function Copy-ArXivArchive {
 
 }
 
-##
-# .SYNOPSIS
-##
 function Export-ArXivArchive {
     [CmdletBinding()]
     param(

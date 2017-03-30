@@ -44,11 +44,6 @@ try {
 
 ## COMMANDS ##
 
-##
-# .SYNOPSIS
-#     Detects which TeX distribution is installed by running
-#     "tex" and checking the reported version.
-##
 function Get-TeXDistribution {
     [CmdletBinding()]
     param(
@@ -73,11 +68,6 @@ function Get-TeXDistribution {
 
 }
 
-##
-# .SYNOPSIS
-#     Returns the default user directory for the current TeX
-#     distribution.
-##
 function Get-TeXUserDir {
     [CmdletBinding()]
     param(
@@ -118,10 +108,6 @@ function Get-TeXUserDir {
 
 }
 
-##
-# .SYNOPSIS
-#     Refreshes the TeX hash to reflect newly installed resources.
-##
 function Update-TeXHash {
     [CmdletBinding()]
     param(
@@ -147,11 +133,6 @@ function Update-TeXHash {
     }
 }
 
-##
-# .SYNOPSIS
-#     Installs a given TeX resource into the current
-#     distribution's user directory.
-##
 function Install-TeXUserResource {
     [CmdletBinding(
         SupportsShouldProcess=$true,
@@ -180,10 +161,6 @@ function Install-TeXUserResource {
 }
 
 
-##
-# .SYNOPSIS
-#     
-##
 function Out-TeXStyle {
     [CmdletBinding()]
     param(

@@ -34,10 +34,6 @@
 
 ## COMMANDS ##
 
-##
-# .SYNOPSIS
-#     Finds the user data directory for Pandoc if it is installed.
-##
 function Get-PandocUserDir {
     [CmdletBinding()]
     param(
@@ -58,10 +54,6 @@ function Get-PandocUserDir {
     }
 }
 
-##
-# .SYNOPSIS
-#
-##
 function Install-PandocUserResource {
     [CmdletBinding(
         SupportsShouldProcess=$true,
