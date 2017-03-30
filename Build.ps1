@@ -5,4 +5,4 @@ if (!(Get-Module -ListAvailable platyPS)) {
 #endregion
 
 Import-Module platyPS
-New-ExternalHelp .\docs -OutputPath .\src\en-US
+New-ExternalHelp -Force .\docs -OutputPath .\src\en-US
