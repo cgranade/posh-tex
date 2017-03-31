@@ -6,3 +6,5 @@ if (!(Get-Module -ListAvailable platyPS)) {
 
 Import-Module platyPS
 New-ExternalHelp -Force .\docs\cmdlets -OutputPath .\src\en-US
+
+mkdocs build
