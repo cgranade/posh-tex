@@ -82,9 +82,6 @@ function Search-TeXCommandTargets {
 }
 
 
-##
-# .SYNOPSIS
-##
 function Search-INSFile {
     [CmdletBinding()]
     param(
