@@ -1,6 +1,6 @@
 ---
 external help file: posh-tex-help.xml
-online version: 
+online version: http://www.cgranade.com/posh-tex/cmdlets/Get-TeXDistribution/
 schema: 2.0.0
 ---
 
