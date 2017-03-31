@@ -1,3 +1,5 @@
 site_name: 'PoShTeX Documentation'
 docs_dir: docs/
 theme: psinder
+markdown_extensions:
+    - markdown_extra.meta
