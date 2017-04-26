@@ -54,7 +54,8 @@ function Expand-ArXivManifest {
         $texMainLocation = ".";
     }
     $texMainBase = Split-Path $texMain -Leaf;
-    $buildFiles[($texMain | Resolve-Path)] = Join-Path "." $texMainBase;
+    $texMainDest = Join-Path "." $texMainBase;
+    $buildFiles[($texMain | Resolve-Path)] = $texMainDest;
     
     # Next, add the BBL.
     $bblBase = set-extension -Path $texMainBase -newExtension "bbl";
@@ -96,6 +97,7 @@ function Expand-ArXivManifest {
     # Finish by attaching the hashtable of build files to the manifest
     # and returning it.
     $expandedManifest = $Manifest.Clone();
+    $expandedManifest["DestinationTeXMain"] = $texMainDest;
     $expandedManifest["BuildFiles"] = $buildFiles;
     
     $expandedManifest
@@ -142,14 +144,24 @@ function Export-ArXivArchive {
 
     $ExpandedManifest = Expand-ArXivManifest $Manifest;
 
+    # Invoke the default TeX build engine in the main project directory,
+    # so that we can make all required TeX artifacts (e.g. *.bbl) from
+    # files that shouldn't be included in the final arXiv build.
     Invoke-TeXBuildEngine $ExpandedManifest.TeXMain;
+
     if ($RunNotebooks -and $ExpandedManifest.Notebooks.Count -ge 0) {
         $ExpandedManifest.Notebooks | Update-JupyterNotebook
     }
     
     $tempDir = Copy-ArXivArchive $ExpandedManifest;
-    
+    $tempTexMain = Join-Path $tempDir $ExpandedManifest.DestinationTeXMain
+
     # TODO: Rewrite LaTeX commands in temporary directory.
+
+    # Invoke pdfLaTeX in the temporary directory to ensure that the rewritten commands
+    # and copied build artifacts (e.g. *.bbl) are correctly utilized.
+    Write-Host -ForegroundColor Blue "Invoking TeX on temporary copy: $tempTexMain."
+    & "pdflatex" $tempTexMain;
 
     $archiveName = "./$($ExpandedManifest["ProjectName"]).zip"
     
