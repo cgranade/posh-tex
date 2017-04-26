@@ -156,7 +156,10 @@ function Export-ArXivArchive {
     $tempDir = Copy-ArXivArchive $ExpandedManifest;
     $tempTexMain = Join-Path $tempDir $ExpandedManifest.DestinationTeXMain
 
-    # TODO: Rewrite LaTeX commands in temporary directory.
+    if ($ExpandedManifest["RenewCommands"]) {
+        Write-Host -ForegroundColor Blue "Rewriting commands on temporary copy.";
+        Update-LaTeXCommands $tempTexMain $ExpandedManifest["RenewCommands"];
+    }
 
     # Invoke pdfLaTeX in the temporary directory to ensure that the rewritten commands
     # and copied build artifacts (e.g. *.bbl) are correctly utilized.
