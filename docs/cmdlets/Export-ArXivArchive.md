@@ -23,10 +23,10 @@ Prepares a ZIP archive of a LaTeX-based project suitable for uploading to arXiv.
 ### Example 1
 ```
 #region Bootstrap PoShTeX
-if (!(Get-Module -ListAvailable -Name posh-tex -ErrorAction SilentlyContinue)) {
-    Install-Module posh-tex -Scope CurrentUser
-}
-Import-Module posh-tex
+$modules = Get-Module -ListAvailable -Name posh-tex;
+if (!$modules) {Install-Module posh-tex -Scope CurrentUser}
+if (!($modules | ? {$_.Version -ge "0.1.5"})) {Update-Module posh-tex}
+Import-Module posh-tex -Version "0.1.5"
 #endregion
 
 Export-ArXivArchive @{
