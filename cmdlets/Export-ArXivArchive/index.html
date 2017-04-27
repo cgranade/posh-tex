@@ -259,6 +259,9 @@ Export-ArXivArchive @{
         &quot;revquantum.sty&quot; = $null;
         &quot;quantumarticle.cls&quot; = $null;
     };
+    RenewCommands = @{
+        &quot;figurefolder&quot; = &quot;fig/&quot;;
+    };
     Notebooks = @(
         &quot;nb/paper-figures.ipynb&quot;
     )
@@ -283,6 +286,10 @@ this cmdlet. The following keys are required:</p>
 </ul>
 <p>The following keys may optionally be specified:</p>
 <ul>
+<li><code>RenewCommands</code>: Hashtable whose keys are LaTeX commands and whose values are
+  new values for those commands. This may be needed, for instance, if figures and
+  other LaTeX dependencies are located in a different folder within your project and
+  in the final arXiv build.</li>
 <li><code>Notebooks</code>: An array of Jupyter Notebooks, each of which will be placed in
   the <code>anc/</code> directory of the generated ZIP archive. If the <code>-RunNotebooks</code>
   switch is present, nominated notebooks will also be executed before building
