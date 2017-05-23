@@ -264,6 +264,9 @@ function Invoke-TeXBuildEngine {
         }
     }
     
+    $TexDirectory = (Get-ChildItem $Name).DirectoryName
+    Push-Location $TexDirectory
+
     if ($preferredCommand -and (Get-Command $preferredCommand -ErrorAction SilentlyContinue)) {
         Write-Host -ForegroundColor Blue "Building $Name using $preferredCommand..."
         & "$preferredCommand" $args $Name
@@ -274,5 +277,7 @@ function Invoke-TeXBuildEngine {
         bibtex $Name
         pdflatex $Name
     }
+    
+    Pop-Location
 
 }
