@@ -164,7 +164,10 @@ function Export-ArXivArchive {
     # Invoke pdfLaTeX in the temporary directory to ensure that the rewritten commands
     # and copied build artifacts (e.g. *.bbl) are correctly utilized.
     Write-Host -ForegroundColor Blue "Invoking TeX on temporary copy: $tempTexMain."
+    & Push-Location $tempDir;
     & "pdflatex" $tempTexMain;
+    & "pdflatex" $tempTexMain;
+    & Pop-Location;
 
     $archiveName = "./$($ExpandedManifest["ProjectName"]).zip"
     
