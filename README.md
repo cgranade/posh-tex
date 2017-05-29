@@ -29,8 +29,32 @@ to use PowerShellGet on Windows 7 and 8.1).
 PS> Install-Module -Name posh-tex -Scope CurrentUser
 ```
 
-We'll have instructions at some point for how to install development
-(unreleased) versions.
+#### Using Without Installing ####
+
+You can always use ``Import-Module`` directly on the included PowerShell description (``*.psd1``) to use unreleased or development versions of PoShTeX without installing them.
+
+```powershell
+PS> Import-Module src/posh-tex.psd1
+```
+
+If you make changes after importing, use ``Import-Module -Force`` to make those changes available in your PowerShell session.
+
+#### Manual Installation ####
+
+To manually install released or development versions of PoShTeX, we must copy the files comprising PoShTeX to a directory matching PowerShell's naming conventions.
+In particular, by default, PowerShell looks for PoShTeX version 0.1.5 in the following folders:
+
+- **Windows**: ``~\Documents\WindowsPowerShell\Modules\posh-tex\0.1.5``
+- **Linux**: ``~/.local/share/powershell/Modules/posh-tex/0.1.5``
+- **macOS / OS X**: TODO
+
+Unfortunately, there's not currently an easy-to-use automated way to find the appropriate path, but for now, so modify the instructions below as needed if you have changed your ``$Env:PSModulePath`` environment variable to look somewhere other than the defaults above.
+
+```
+PS> Copy-Item -Recurse src/ ~/.local/share/powershell/Modules/posh-tex/0.1.5
+```
+
+**NB**: If the version number in your installation path does not match the version number in ``src/posh-tex.psd1``, PowerShell will silently ignore your installation when you run ``Import-Module posh-tex``.
 
 ### Using PoShTeX to Write Installers ###
 
