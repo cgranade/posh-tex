@@ -102,7 +102,8 @@ function Update-JupyterNotebook {
         $NotebookKernel = $null
     )
 
-    $script = @"
+    begin {
+        $script = @"
 from nbconvert.preprocessors import ExecutePreprocessor
 
 try:
@@ -122,7 +123,7 @@ if notebook_kernel:
 else:
     ep = ExecutePreprocessor()
 
-with open(notebook_path, 'r') as notebook_file:
+with open(notebook_path, 'r', encoding='utf-8') as notebook_file:
     nb = nbformat.read(notebook_file, as_version=4)
 
 ep.preprocess(nb, {'metadata': {
@@ -130,9 +131,10 @@ ep.preprocess(nb, {'metadata': {
 }})
 
 with open(notebook_path, 'w') as notebook_file:
-    nbformat.write(nb, notebook_file)      
+    nbformat.write(nb, notebook_file)
 "@
-    
+    }
+
     process {
         foreach ($notebookPath in $Path) {
             Invoke-Python -Import @{
