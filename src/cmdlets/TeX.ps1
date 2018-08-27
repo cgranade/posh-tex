@@ -263,22 +263,23 @@ function Invoke-TeXBuildEngine {
             $args = "";
         }
     }
-    
+
     $TexDirectory = (Get-ChildItem $Name).DirectoryName
     $TexName = (Get-ChildItem $Name).Name
+
     Push-Location $TexDirectory
 
-    if ($preferredCommand -and (Get-Command $preferredCommand -ErrorAction SilentlyContinue)) {
-        Write-Host -ForegroundColor Blue "Building $TexName using $preferredCommand..."
-        & "$preferredCommand" $args $TexName
-    } else {
-        Write-Host -ForegroundColor Blue "Building $TexName manually using pdflatex and bibtex..."
-        pdflatex $TexName
-        pdflatex $TexName
-        bibtex $TexName
-        pdflatex $TexName
-    }
-    
+        if ($preferredCommand -and (Get-Command $preferredCommand -ErrorAction SilentlyContinue)) {
+            Write-Host -ForegroundColor Blue "Building $TexName using $preferredCommand..."
+            & "$preferredCommand" $args $TexName
+        } else {
+            Write-Host -ForegroundColor Blue "Building $TexName manually using pdflatex and bibtex..."
+            pdflatex $TexName
+            pdflatex $TexName
+            bibtex $TexName
+            pdflatex $TexName
+        }
+
     Pop-Location
 
 }
