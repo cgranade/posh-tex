@@ -164,13 +164,27 @@ function Export-ArXivArchive {
     # Invoke pdfLaTeX in the temporary directory to ensure that the rewritten commands
     # and copied build artifacts (e.g. *.bbl) are correctly utilized.
     Write-Host -ForegroundColor Blue "Invoking TeX on temporary copy: $tempTexMain."
-    & Push-Location $tempDir;
-    & "pdflatex" $tempTexMain;
-    & "pdflatex" $tempTexMain;
-    & Pop-Location;
+    Push-Location $tempDir;
+        # Since this build is only to verify that everything worked, we make
+        # a list of all files currently in the temporary build directory.
+        # We will delete anything that's not in this list at the end to prevent
+        # *.aux and *.pdf files from leaking into the arXiv zip.
+        $tempDirContents = Get-ChildItem -Recurse;
+
+        # Note that we don't use Invoke-TeXBuildEngine here since we are
+        # compiling to verify that things will work correctly when built by
+        # arXiv. Their build process doesn't include bibtex or similar steps,
+        # so we emulate here by only running pdflatex.
+        & "pdflatex" $tempTexMain;
+        & "pdflatex" $tempTexMain;
+
+        # Before popping out of the temporary build directory, we need to clean
+        # it up.
+        Get-ChildItem -Recurse -Exclude $tempDirContents | Remove-Item;
+    Pop-Location;
 
     $archiveName = "./$($ExpandedManifest["ProjectName"]).zip"
-    
+
     # We make the final ZIP file using the native zip command
     # on POSIX in lieu of
     # https://github.com/PowerShell/Microsoft.PowerShell.Archive/issues/26.
