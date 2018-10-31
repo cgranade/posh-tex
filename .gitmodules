@@ -1,0 +1,3 @@
+[submodule "mkdocs-psinder"]
+	path = mkdocs-psinder
+	url = git@github.com:cgranade/mkdocs-psinder.git
