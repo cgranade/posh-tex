@@ -42,16 +42,16 @@ If you make changes after importing, use ``Import-Module -Force`` to make those 
 #### Manual Installation ####
 
 To manually install released or development versions of PoShTeX, we must copy the files comprising PoShTeX to a directory matching PowerShell's naming conventions.
-In particular, by default, PowerShell looks for PoShTeX version 0.1.7 in the following folders:
+In particular, by default, PowerShell looks for PoShTeX version 0.1.7.4 in the following folders:
 
-- **Windows**: ``~\Documents\WindowsPowerShell\Modules\posh-tex\0.1.7``
-- **Linux**: ``~/.local/share/powershell/Modules/posh-tex/0.1.7``
+- **Windows**: ``~\Documents\WindowsPowerShell\Modules\posh-tex\0.1.7.4``
+- **Linux**: ``~/.local/share/powershell/Modules/posh-tex/0.1.7.4``
 - **macOS / OS X**: TODO
 
 Unfortunately, there's not currently an easy-to-use automated way to find the appropriate path, but for now, so modify the instructions below as needed if you have changed your ``$Env:PSModulePath`` environment variable to look somewhere other than the defaults above.
 
 ```
-PS> Copy-Item -Recurse src/ ~/.local/share/powershell/Modules/posh-tex/0.1.7
+PS> Copy-Item -Recurse src/ ~/.local/share/powershell/Modules/posh-tex/0.1.7.4
 ```
 
 **NB**: If the version number in your installation path does not match the version number in ``src/posh-tex.psd1``, PowerShell will silently ignore your installation when you run ``Import-Module posh-tex``.

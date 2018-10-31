@@ -180,7 +180,12 @@ function Export-ArXivArchive {
 
         # Before popping out of the temporary build directory, we need to clean
         # it up.
-        Get-ChildItem -Recurse -Exclude $tempDirContents | Remove-Item;
+        # Use -Force to enable using posh-tex in non-interactive environments.
+        $newContents = Get-ChildItem -Recurse;
+        Compare-Object $tempDirContents $newContents `
+            | Where-Object { $_.SideIndicator -eq "=>" } `
+            | Select-Object -ExpandProperty InputObject `
+            | Remove-Item -Force -Confirm:$false -Verbose;
     Pop-Location;
 
     $archiveName = "./$($ExpandedManifest["ProjectName"]).zip"

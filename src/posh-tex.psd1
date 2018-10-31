@@ -37,7 +37,7 @@
 RootModule = 'posh-tex.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.1.7'
+ModuleVersion = '0.1.7.4'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
